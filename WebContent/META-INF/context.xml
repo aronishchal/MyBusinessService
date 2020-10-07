@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context>
+	<Resource name="jdbc/businesses" auth="Container"
+		type="javax.sql.DataSource" maxActive="100" maxIdle="30"
+		maxWait="10000" username="root" password="passw0rd"
+		driverClassName="com.mysql.jdbc.Driver"
+		accessToUnderlyingConnectionAllowed="true" validationQuery="SELECT 1"
+		url="jdbc:mysql://localhost:3306/businesses?useLegacyDatetimeCode=false&amp;serverTimezone=UTC" />
+	<Manager pathname="" />
+</Context>
