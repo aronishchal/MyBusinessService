@@ -6,13 +6,14 @@ This is a simple REST Service with CRUD Operations for a Business Entity which h
 
 <h2>Usage</h2>
 <h3>GET</h3>
+<h4>Request</h4>
 
 ```
 GET /mybusinessservice/businesses HTTP/1.1
 Content-Type: application/json
 ```
 
-<h3>Successful Response</h3>
+<h4>Successful Response</h4>
 
 ```
 HTTP/1.1 200 OK
@@ -28,6 +29,7 @@ Content-Type: application/json
 ```
 
 <h3>POST</h3>
+<h4>Request</h4>
 
 ```
 POST /mybusinessservice/businesses HTTP/1.1
@@ -40,11 +42,12 @@ Content-Type: application/json
 }
 ```
 
-<h3>Successful Response</h3>
+<h4>Successful Response</h3>
 
 `HTTP/1.1 201 CREATED`
 
 <h3>PUT</h3>
+<h4>Request</h4>
 
 ```
 PUT /mybusinessservice/businesses/{id} HTTP/1.1
@@ -57,7 +60,7 @@ Content-Type: application/json
 }
 ```
 
-<h3>Successful Response</h3>
+<h4>Successful Response</h4>
 
 ```
 HTTP/1.1 200 OK
@@ -73,9 +76,10 @@ Content-Type: application/json
 ```
 
 <h3>DELETE</h3>
+<h4>Request</h4>
 
 `DELETE /mybusinessservice/businesses/{id} HTTP/1.1`
 
-<h3>Successful Response</h3>
+<h4>Successful Response</h4>
 
 `HTTP/1.1 204 No Content`
