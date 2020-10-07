@@ -28,6 +28,17 @@ public class BusinessService {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getLocalizedMessage()).build();
 		}
 	}
+	
+	@GET
+	@Path("/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getBusiness(@PathParam("id") @NotNull int id) {
+		try {
+			return Response.ok(businessDao.getBusiness(id), MediaType.APPLICATION_JSON).build();
+		} catch (Exception e) {
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getLocalizedMessage()).build();
+		}
+	}
 
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)

@@ -58,11 +58,49 @@ public class BusinessDao {
 
 		return businessList;
 	}
+	
+	public Business getBusiness(int id) throws Exception {
+		Business business = null;
+
+		Connection con;
+		PreparedStatement stmt;
+		ResultSet rs;
+
+		try {
+			InitialContext ctx = new InitialContext();
+			DataSource ds = (DataSource) ctx.lookup(Constants.JNDI_DATA_SOURCE);
+			con = ds.getConnection();
+			stmt = con.prepareStatement(SQL_GET_BUSINESS);
+
+			stmt.setInt(1, id);
+			rs = stmt.executeQuery();
+
+			if (rs.next()) {
+				business = retrieveBusinessFromResultSet(rs);
+			} else {
+				throw new NotFoundException("Record with id '" + id + "' not found");
+			}
+
+			con.close();
+			stmt.close();
+			rs.close();
+		} catch (SQLException sqle) {
+			logger.log(Level.SEVERE, sqle.getMessage(), sqle);
+			throw sqle;
+		} catch (NamingException ne) {
+			logger.log(Level.SEVERE, ne.getMessage(), ne);
+			throw ne;
+		} catch (Exception e) {
+			logger.log(Level.SEVERE, e.getMessage(), e);
+			throw e;
+		}
+
+		return business;
+	}
 
 	public Business insertBusiness(Business business) throws Exception {
 		Connection con;
 		PreparedStatement stmt;
-		ResultSet rs;
 		Business insertedBusiness = null;
 
 		try {
@@ -76,18 +114,9 @@ public class BusinessDao {
 
 			stmt.executeUpdate();
 			logger.log(Level.INFO, "Row added");
-			stmt.close();
-
-			stmt = con.prepareStatement(SQL_GET_BUSINESS);
-			stmt.setInt(1, business.getId());
-			rs = stmt.executeQuery();
-			if (rs.next()) {
-				insertedBusiness = retrieveBusinessFromResultSet(rs);
-			}
 
 			con.close();
 			stmt.close();
-			rs.close();
 		} catch (SQLException sqle) {
 			logger.log(Level.SEVERE, sqle.getMessage(), sqle);
 			throw sqle;
@@ -105,7 +134,6 @@ public class BusinessDao {
 	public Business updateBusiness(int id, Business business) throws Exception {
 		Connection con;
 		PreparedStatement stmt;
-		ResultSet rs;
 		Business updatedBusiness = null;
 
 		try {
@@ -127,16 +155,8 @@ public class BusinessDao {
 				logger.log(Level.INFO, "Row updated");
 			}
 
-			stmt = con.prepareStatement(SQL_GET_BUSINESS);
-			stmt.setInt(1, id);
-			rs = stmt.executeQuery();
-			if (rs.next()) {
-				updatedBusiness = retrieveBusinessFromResultSet(rs);
-			}
-
 			con.close();
 			stmt.close();
-			rs.close();
 		} catch (SQLException sqle) {
 			logger.log(Level.SEVERE, sqle.getMessage(), sqle);
 			throw sqle;
