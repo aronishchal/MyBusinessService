@@ -2,10 +2,11 @@
 Simple Java REST Service for a Business Entity with name and address. 
 
 <h2>Introduction</h2>
-This is a simple REST Service with CRUD Operations for a Business Entity which has a name and address. I built this using Java, Jersey, JAX-B and JDBC. I used MySQL as the Database, but this could be used with any Database as long as the correct JDBC driver is used.
+This is a simple REST Service with CRUD Operations for a Business Entity which has a name and address. The address is geocoded to obtain lat and long coordinates using the Location IQ geocoding API.<br/>
+This was built using Java, Jersey and JDBC. The database is MySQL, but this can work with any database as long as the correct JDBC driver is provided.
 
 <h2>Usage</h2>
-<h3>GET</h3>
+<h3>GET All</h3>
 <h4>Request</h4>
 
 ```
@@ -22,10 +23,34 @@ Content-Type: application/json
 [
     {
         "id": 4,
+        "lat": 40.78382735,
+        "lon": -73.9753661840512,
         "name": "My Consulting Business",
         "address": "129 W 81st St New York, NY 10024 USA"
     }
 ]
+```
+<h3>GET by id</h3>
+<h4>Request</h4>
+
+```
+GET /mybusinessservice/businesses HTTP/1.1
+Content-Type: application/json
+```
+
+<h4>Successful Response</h4>
+
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+    "id": 4,
+    "lat": 40.78382735,
+    "lon": -73.9753661840512,
+    "name": "My Consulting Business",
+    "address": "129 W 81st St New York, NY 10024 USA"
+}
 ```
 
 <h3>POST</h3>
