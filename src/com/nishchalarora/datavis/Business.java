@@ -10,19 +10,25 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class Business implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private int id;
+	private double lat;
+	private double lon;
 
 	@NotNull
 	@Size(min = 1, max = 255)
 	private String name;
-	
+
 	@NotNull
 	@Size(min = 1, max = 255)
 	private String address;
 
-	public Business() {}
+	public Business() {
+	}
 
-	public Business(int id, String name, String address) {
+	public Business(int id, double lat, double lon, @NotNull @Size(min = 1, max = 255) String name,
+			@NotNull @Size(min = 1, max = 255) String address) {
 		this.id = id;
+		this.lat = lat;
+		this.lon = lon;
 		this.name = name;
 		this.address = address;
 	}
@@ -49,5 +55,21 @@ public class Business implements Serializable {
 
 	public void setAddress(String address) {
 		this.address = address;
+	}
+
+	public double getLat() {
+		return lat;
+	}
+
+	public void setLat(double lat) {
+		this.lat = lat;
+	}
+
+	public double getLon() {
+		return lon;
+	}
+
+	public void setLon(double lon) {
+		this.lon = lon;
 	}
 }

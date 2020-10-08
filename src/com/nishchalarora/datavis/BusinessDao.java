@@ -1,5 +1,7 @@
 package com.nishchalarora.datavis;
 
+import java.io.InputStream;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -7,22 +9,54 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.net.ssl.HttpsURLConnection;
 import javax.sql.DataSource;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
+
+import org.apache.commons.io.IOUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class BusinessDao {
 	private static final String SQL_GET_ALL_BUSINESSES = "SELECT * FROM Business";
 	private static final String SQL_GET_BUSINESS = "SELECT * FROM Business WHERE id = ?";
-	private static final String SQL_INSERT_BUSINESS = "INSERT INTO Business (name, address) VALUES (?, ?)";
-	private static final String SQL_UPDATE_BUSINESS = "UPDATE Business SET name = ?, address = ? WHERE id = ?";
+	private static final String SQL_INSERT_BUSINESS = "INSERT INTO Business (name, address, lat, lon) VALUES (?, ?, ?, ?)";
+	private static final String SQL_UPDATE_BUSINESS = "UPDATE Business SET name = ?, address = ?, lat = ?, lon = ? WHERE id = ?";
 	private static final String SQL_DELETE_BUSINESS = "DELETE FROM Business WHERE id = ?";
 
+	private static Properties properties = new Properties();
+	private static String geocodingApiKey = null;
+
 	private static final Logger logger = Logger.getLogger(BusinessDao.class.getName());
+
+	public BusinessDao() {
+		try {
+			properties.load(BusinessDao.class.getClassLoader().getResourceAsStream("mybusinessservice.properties"));
+			geocodingApiKey = properties.getProperty("geocodingapikey");
+		} catch (Exception e) {
+			logger.severe(e.getMessage());
+		}
+	}
+
+	private static String getResponseData(HttpsURLConnection connection) throws Exception {
+		InputStream is = connection.getInputStream();
+		byte[] bytes = IOUtils.toByteArray(is);
+		return new String(bytes, "UTF-8");
+	}
+
+	private static HttpsURLConnection createConnection(URL url) throws Exception {
+		HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+		connection.setRequestMethod("GET");
+
+		return connection;
+	}
 
 	public List<Business> getBusinesses() throws Exception {
 		List<Business> businessList = new ArrayList<Business>();
@@ -58,7 +92,7 @@ public class BusinessDao {
 
 		return businessList;
 	}
-	
+
 	public Business getBusiness(int id) throws Exception {
 		Business business = null;
 
@@ -98,21 +132,32 @@ public class BusinessDao {
 		return business;
 	}
 
-	public Business insertBusiness(Business business) throws Exception {
+	public void insertBusiness(Business business) throws Exception {
 		Connection con;
 		PreparedStatement stmt;
-		Business insertedBusiness = null;
 
 		try {
+			Double lat = null;
+			Double lon = null;
+			
+			JSONObject geocoded = getGeocodedAddressInfo(business.getAddress());
+			if (geocoded != null) {
+				lat = geocoded.getDouble("lat");
+				lon = geocoded.getDouble("lon");
+			} else {
+				throw new NotFoundException("Address not found");
+			}
+
 			InitialContext ctx = new InitialContext();
 			DataSource ds = (DataSource) ctx.lookup(Constants.JNDI_DATA_SOURCE);
 			con = ds.getConnection();
 			stmt = con.prepareStatement(SQL_INSERT_BUSINESS);
-
 			stmt.setString(1, business.getName());
 			stmt.setString(2, business.getAddress());
-
+			stmt.setDouble(3, lat);
+			stmt.setDouble(4, lon);
 			stmt.executeUpdate();
+
 			logger.log(Level.INFO, "Row added");
 
 			con.close();
@@ -127,24 +172,34 @@ public class BusinessDao {
 			logger.log(Level.SEVERE, e.getMessage(), e);
 			throw e;
 		}
-
-		return insertedBusiness;
 	}
 
-	public Business updateBusiness(int id, Business business) throws Exception {
+	public void updateBusiness(int id, Business business) throws Exception {
 		Connection con;
 		PreparedStatement stmt;
-		Business updatedBusiness = null;
 
 		try {
+			Double lat = null;
+			Double lon = null;
+			
+			JSONObject geocoded = getGeocodedAddressInfo(business.getAddress());
+			if (geocoded != null) {
+				lat = geocoded.getDouble("lat");
+				lon = geocoded.getDouble("lon");
+			} else {
+				throw new NotFoundException("Address not found");
+			}
+			
 			InitialContext ctx = new InitialContext();
 			DataSource ds = (DataSource) ctx.lookup(Constants.JNDI_DATA_SOURCE);
 			con = ds.getConnection();
-			
+
 			stmt = con.prepareStatement(SQL_UPDATE_BUSINESS);
 			stmt.setString(1, business.getName());
 			stmt.setString(2, business.getAddress());
-			stmt.setInt(3, id);
+			stmt.setDouble(3, lat);
+			stmt.setDouble(4, lon);
+			stmt.setInt(5, id);
 
 			int updated = stmt.executeUpdate();
 			stmt.close();
@@ -167,8 +222,6 @@ public class BusinessDao {
 			logger.log(Level.SEVERE, e.getMessage(), e);
 			throw e;
 		}
-
-		return updatedBusiness;
 	}
 
 	public void deleteBusiness(int id) throws Exception {
@@ -204,10 +257,34 @@ public class BusinessDao {
 		}
 	}
 
+	private JSONObject getGeocodedAddressInfo(String address) throws Exception {
+		JSONObject geocoded = null;
+		
+		URL url = new URL("https://us1.locationiq.com/v1/search.php?key=" + geocodingApiKey + "&q="
+				+ address + "&format=json");
+		HttpsURLConnection connection = createConnection(url);
+		connection.connect();
+
+		if (connection.getResponseCode() == HttpsURLConnection.HTTP_OK) {
+			String responseData = getResponseData(connection);
+			JSONArray arr = new JSONArray(responseData);
+			if (arr.get(0) != null) {
+				geocoded = (JSONObject) arr.get(0);
+			}
+		} else {
+			logger.log(Level.SEVERE, connection.getResponseMessage(), connection.getErrorStream());
+			throw new InternalServerErrorException(connection.getResponseMessage());
+		}
+		
+		return geocoded;
+	}
+	
 	private Business retrieveBusinessFromResultSet(ResultSet rs) throws SQLException {
 		int id = rs.getInt("id");
 		String name = rs.getString("name");
 		String address = rs.getString("address");
-		return (new Business(id, name, address));
+		double lat = rs.getDouble("lat");
+		double lon = rs.getDouble("lon");
+		return (new Business(id, lat, lon, name, address));
 	}
 }

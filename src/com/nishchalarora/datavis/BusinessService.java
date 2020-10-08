@@ -45,8 +45,8 @@ public class BusinessService {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response createBusiness(@Valid Business business) {
 		try {
-			Business insertedBusiness = businessDao.insertBusiness(business);
-			return Response.status(Status.CREATED).entity(insertedBusiness).build();
+			businessDao.insertBusiness(business);
+			return Response.status(Status.CREATED).build();
 		} catch (Exception e) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getLocalizedMessage()).build();
 		}
@@ -57,8 +57,8 @@ public class BusinessService {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response updateBusiness(@PathParam("id") @NotNull int id, @Valid Business business) {
 		try {
-			Business updatedBusiness = businessDao.updateBusiness(id, business);
-			return Response.ok(updatedBusiness, MediaType.APPLICATION_JSON).build();
+			businessDao.updateBusiness(id, business);
+			return Response.status(Status.OK).build();
 		} catch (NotFoundException nfe) {
 			return Response.status(Status.NOT_FOUND).entity(nfe.getLocalizedMessage()).build();
 		} catch (Exception e) {
