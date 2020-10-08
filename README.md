@@ -34,7 +34,7 @@ Content-Type: application/json
 <h4>Request</h4>
 
 ```
-GET /mybusinessservice/businesses HTTP/1.1
+GET /mybusinessservice/businesses/{id} HTTP/1.1
 Content-Type: application/json
 ```
 
